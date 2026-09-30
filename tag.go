@@ -28,12 +28,12 @@ var ErrNoTagsFound = errors.New("no tags found")
 // Returns non-nil error if the format of the given data could not be determined, or if there was a problem
 // parsing the data.
 func ReadFrom(r io.ReadSeeker) (Metadata, error) {
-	b, err := readBytes(r, 11)
+	b, err := readBytes(r, 12)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = r.Seek(-11, io.SeekCurrent)
+	_, err = r.Seek(-12, io.SeekCurrent)
 	if err != nil {
 		return nil, fmt.Errorf("could not seek back to original position: %v", err)
 	}
@@ -53,6 +53,9 @@ func ReadFrom(r io.ReadSeeker) (Metadata, error) {
 
 	case string(b[0:4]) == "DSD ":
 		return ReadDSFTags(r)
+
+	case string(b[0:4]) == "FORM" && (string(b[8:12]) == "AIFF" || string(b[8:12]) == "AIFC"):
+		return ReadAIFFTags(r)
 	}
 
 	m, err := ReadID3v1Tags(r)
@@ -95,6 +98,7 @@ const (
 	FLAC            FileType = "FLAC" // FLAC file
 	OGG             FileType = "OGG"  // OGG file
 	DSF             FileType = "DSF"  // DSF file DSD Sony format see https://dsd-guide.com/sites/default/files/white-papers/DSFFileFormatSpec_E.pdf
+	AIFF            FileType = "AIFF" // AIFF file
 )
 
 // Metadata is an interface which is used to describe metadata retrieved by this package.
